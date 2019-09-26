@@ -5,11 +5,40 @@ import ApartmentTileView from "./ApartmentTileView";
 import { Dropdown } from '../components/Dropdown';
 import { Select } from '../components/select';
 import { filterByLocation } from '../actions/filterByLocationAction'
+import { filter } from '../actions/filter'
+import { ApartmentContainer } from './commons';
+import { LoadingItems } from './loadingItems'
 
 class ApartmentViewByLocation extends React.Component {
 
+  constructor(props){
+    super(props);
+    this.state = {
+      amneties:[]
+    }
+  }
+
   componentDidMount() {
     fetchApartmentsList()(this.props.dispatch);
+  }
+
+  handleAmnetiesSelectChange = ( e ) => {
+    let name = e.target.name;
+    if(this.state.amneties.indexOf(name) === -1) {
+        this.setState({
+            amneties : [...this.state.amneties, name]
+        })
+    }
+    else{
+        let newAmneties = this.state.amneties.filter(amnety => amnety != name);
+        this.setState({
+            amneties : newAmneties
+        })
+    }
+  }
+
+  handlefilterSubmit = () => {
+      this.props.handleFilterSubmit(this.state.amneties);
   }
 
   render() {
@@ -17,55 +46,30 @@ class ApartmentViewByLocation extends React.Component {
     if (!(apartmentsList.length)) {
       if(this.props.selectedLocation){
          return (
-          <div className="container container-list" >
-           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
-          <div>Sorry!! We dont have apartments at {this.props.selectedLocation}</div>
-          </div>
+          <LoadingItems type="notfound" onlocationChange={this.props.onlocationChange}/>
           )
-
       }
       else{
-
-         return (
-          <div className="container container-list" >
-           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
-          <div>Loading...</div>
-          </div>
-          )
-
-
+         <LoadingItems type="loading" onlocationChange={this.props.onlocationChange}/>
       }
-       
-      
-
     }
-
     return (
-
-
-      <div className="container-list container-lg clearfix">
-
-      <Select/>
-
-
+      <div className = "container-list container-lg">
+        <div style={{display: 'flex' , margin:'20px'}}>
         <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
-        <div className="col-12 float-left">
-          <div className="view-apartment-list">
-            {apartmentsList && apartmentsList.map((item, index) => (
-                <ApartmentTileView key={index} apartment={item} />
-            ))}
-          </div>
+        <Select title="Add more Filters" options = {["television", "elevator", "fridge", "heating", "cooker", "microwave"]} onChange={this.handleAmnetiesSelectChange} handleSubmit={this.handlefilterSubmit}/>
         </div>
+        
+        <ApartmentContainer items ={apartmentsList}/>
       </div>
     )
   }
 }
 
+
 const getFilteredList = (list,filter) => {
-  console.log(filter)
   switch(filter) {
     case 'SHOW_ALL': {
-      console.log("filtering")
       return list; 
     }
     default:
@@ -73,6 +77,21 @@ const getFilteredList = (list,filter) => {
         return filter === apt.location.title
       })
   }
+};
+
+const getFilteredListByAmenities = (list,amenitiesFilter) => {
+  return list.filter(aptObj =>{
+      let NotToFilter = true;
+      let amenities = aptObj.amenities;
+        for(let i = 0; i<amenitiesFilter.length; i++){
+          if(NotToFilter){
+            if((amenities.indexOf(amenitiesFilter[i])) == -1){
+              NotToFilter =  false;
+            }
+          }
+        }
+        return NotToFilter;
+  })
 };
 
 const isEmpty = (obj) => {
@@ -87,8 +106,13 @@ const mapStateToProps = state =>{
   if(isEmpty(state.apartmentsList.apartments)){
     return {apartmentsList : []}
   }
+  var apartmentsList = getFilteredList(state.apartmentsList.apartments.items ,state.locationFilter);
+
+  if(apartmentsList.length && (state.amenitiesFilter.length)){
+    apartmentsList = getFilteredListByAmenities(apartmentsList ,state.amenitiesFilter);
+  }
   return{
-    apartmentsList: getFilteredList(state.apartmentsList.apartments.items ,state.locationFilter),
+    apartmentsList: apartmentsList,
     selectedLocation : state.locationFilter
   }
 }
@@ -96,6 +120,7 @@ const mapStateToProps = state =>{
 const mapDispatchToProps = (dispatch) => {
   return {
     onlocationChange:(value)=>{dispatch(filterByLocation(value))},
+    handleFilterSubmit : (value) => {dispatch(filter(value))},
     dispatch
   };
 };
