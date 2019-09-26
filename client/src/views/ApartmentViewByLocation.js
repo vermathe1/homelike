@@ -3,6 +3,7 @@ import {connect} from 'react-redux';
 import {fetchApartmentsList} from './../actions/apartmentsListActions';
 import ApartmentTileView from "./ApartmentTileView";
 import { Dropdown } from '../components/Dropdown';
+import { Select } from '../components/select';
 import { filterByLocation } from '../actions/filterByLocationAction'
 
 class ApartmentViewByLocation extends React.Component {
@@ -17,7 +18,7 @@ class ApartmentViewByLocation extends React.Component {
       if(this.props.selectedLocation){
          return (
           <div className="container container-list" >
-           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]}/>
+           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
           <div>Sorry!! We dont have apartments at {this.props.selectedLocation}</div>
           </div>
           )
@@ -27,7 +28,7 @@ class ApartmentViewByLocation extends React.Component {
 
          return (
           <div className="container container-list" >
-           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]}/>
+           <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
           <div>Loading...</div>
           </div>
           )
@@ -40,8 +41,14 @@ class ApartmentViewByLocation extends React.Component {
     }
 
     return (
+
+
       <div className="container-list container-lg clearfix">
-        <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]}/>
+
+      <Select/>
+
+
+        <Dropdown onChange = { this.props.onlocationChange } options={["Berlin","Bangalore","Kathmandu"]} title="Please search by location"/>
         <div className="col-12 float-left">
           <div className="view-apartment-list">
             {apartmentsList && apartmentsList.map((item, index) => (
